@@ -1,25 +1,58 @@
-<script>
+<script lang="ts">
+import { page } from '$app/stores';
 import { onMount } from "svelte";
-import { planets } from './store.js';
+import { planets, paginationPage } from './store';
 
-onMount(async () => {
-  fetch("https://swapi.dev/api/planets")
+const fetchPlanetsData = (fetchPage: number) => {
+	fetch(`https://swapi.dev/api/planets?page=${fetchPage || 1}`)
   .then(response => response.json())
   .then(data => {
-    planets.set(data.results);
+    planets.set({
+			...$planets,
+			[fetchPage]: data.results
+		});
   }).catch(error => {
     console.log(error);
     return [];
   });
+}
+
+onMount(async () => {
+  fetchPlanetsData(1);
 });
+
+const nextPage = () => {
+	planets.set({
+		...$planets
+	});
+	
+	const currentPage = $paginationPage || 1;
+	const nextPage = currentPage + 1;
+	paginationPage.set(nextPage);
+	fetchPlanetsData(nextPage);
+}
+
+const prevPage = () => {
+	const currentPage = $paginationPage || 1;
+	const prevPage = currentPage - 1;
+	paginationPage.set(prevPage);
+	fetchPlanetsData(prevPage);
+}
 
 </script>
 
 <main>
 	<h1>Planets</h1>
-	{#each $planets as planet}
-		<a href={`/planet/${planet.name}`}>{planet.name}</a>
-	{/each}
+	{#if !$planets[$paginationPage]}
+		<p>Loading...</p>
+	{:else}
+		{#each $planets[$paginationPage] as planet}
+			<a href={`/planet/${planet.name}`}>{planet.name}</a>
+		{/each}
+	{/if}
+	<button on:click={prevPage}>Previous</button>
+	<span>{$paginationPage}</span>
+	<button on:click={nextPage}>Next</button>
 </main>
 
 <style>
