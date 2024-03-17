@@ -2,23 +2,33 @@
 import { page } from '$app/stores';
 import { onMount } from "svelte";
 import { planets, paginationPage } from './store';
+import { initializeDatabase, getPlanetsFromDatabase, storePlanetsInDatabase } from './db';
 
 const fetchPlanetsData = (fetchPage: number) => {
+	if ($planets[fetchPage]) return;
+
 	fetch(`https://swapi.dev/api/planets?page=${fetchPage || 1}`)
-  .then(response => response.json())
-  .then(data => {
-    planets.set({
-			...$planets,
-			[fetchPage]: data.results
+		.then(response => response.json())
+		.then(data => {
+			storePlanetsInDatabase(data.results);
+			planets.set({
+				...$planets,
+				[fetchPage]: data.results
+			});
+		}).catch(error => {
+			console.log(error);
+			return [];
 		});
-  }).catch(error => {
-    console.log(error);
-    return [];
-  });
 }
 
 onMount(async () => {
-  fetchPlanetsData(1);
+	initializeDatabase().then(() => {
+		getPlanetsFromDatabase().then((data) => {
+			console.log(data);
+			planets.set(data);
+			fetchPlanetsData(1);
+		});
+	});
 });
 
 const nextPage = () => {

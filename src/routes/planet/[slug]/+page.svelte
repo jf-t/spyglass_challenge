@@ -4,6 +4,7 @@
 
   import { planets, paginationPage, currentPlanet, planetInfoKeys } from '../../store';
   import type { Planet, Resident } from '../../types';
+  import { getPlanetsFromDatabase, getPlanetFromDatabase, initializeDatabase, storePlanetsInDatabase } from '../../db';
 
 
   const setCurrentPlanet = (planet: Planet) => {
@@ -28,26 +29,40 @@
       });
     });
   }
+
+  const fetchPlanetData = () => {
+    getPlanetFromDatabase($page.params.slug).then((data) => {
+      console.log("specirfic planet")
+      console.log(data)
+      if (data) {
+        setCurrentPlanet(data);
+      } else {
+        fetch(`https://swapi.dev/api/planets?search=${$page.params.slug}`)
+        .then(response => response.json())
+        .then(data => {
+          storePlanetsInDatabase(data.results);
+          if (data.results.length > 0) {
+            setCurrentPlanet(data.results[0]);
+          } else {
+            console.log('Planet not found');
+          }
+        }).catch(error => {
+          console.log(error);
+          return [];
+        });
+      }
+    });
+  }
   
   onMount(async () => {
-    if (!$planets[$paginationPage]?.length) {
-      fetch(`https://swapi.dev/api/planets?page=${$paginationPage}`)
-      .then(response => response.json())
-      .then(data => {
-        planets.set({
-          ...$planets,
-          [$paginationPage]: data.results
-        });
-        setCurrentPlanet(data.results.filter((planet: Planet) => planet.name === $page.params.slug)[0])
-      }).catch(error => {
-        console.log(error);
-        return [];
+    initializeDatabase().then(() => {
+      getPlanetsFromDatabase().then((data) => {
+        console.log(data);
+        planets.set(data);
+        fetchPlanetData();
       });
-    } else {
-      console.log($planets[$paginationPage].filter((planet: Planet) => planet.name === $page.params.slug)[0])
-      setCurrentPlanet($planets[$paginationPage].filter((planet: Planet) => planet.name === $page.params.slug)[0]);
-    }
-  })
+    });
+  });
 </script>
 
 {#if !$currentPlanet}
