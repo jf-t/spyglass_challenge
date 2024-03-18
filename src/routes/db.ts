@@ -6,12 +6,11 @@ let db: IDBDatabase | null = null;
 export const initializeDatabase = () => {
   return new Promise((resolve, reject) => {
     const request = window.indexedDB.open("StarWars", 2);
-    request.onerror = (err) => {
-      console.error('Error opening indexedDB', err);
+    request.onerror = () => {
+      reject(request.error);
     }
-
+    
     request.onsuccess = () => {
-      
       db = request.result;
       resolve({ success: true })
     }
@@ -24,15 +23,22 @@ export const initializeDatabase = () => {
 }
 
 export const storePlanetsInDatabase = async (planets: Planet[]) => {
-  if (!db) return;
-
-  const transaction = db.transaction(['planets'], 'readwrite');
-  const store = transaction.objectStore('planets');
-  
   return new Promise((resolve, reject) => {
+    if (!db) {
+      reject("Database not initialized");
+      return;
+    }
+
+    const transaction = db.transaction(['planets'], 'readwrite');
+    const store = transaction.objectStore('planets');
+  
     planets.map((planet) => {
       const storeAdd = store.add(planet);
 
+      storeAdd.onerror = () => {
+        reject(storeAdd.error);
+      }
+      
       storeAdd.onsuccess = () => {
         resolve({ success: true });
       }
@@ -40,16 +46,50 @@ export const storePlanetsInDatabase = async (planets: Planet[]) => {
   })
 }
 
-export const getPlanetsFromDatabase = async () => {
-  if (!db) return;
-
-  const transaction = db.transaction(['planets'], 'readwrite');
-  const store = transaction.objectStore('planets');
-
+export const storeResidentDataInDatabase = (planetName: string, residents: Resident[]): Promise<Planet> => {
   return new Promise((resolve, reject) => {
+    if (!db) {
+      reject("Database not initialized");
+      return;
+    }
+
+    const transaction = db.transaction(['planets'], 'readwrite');
+    const store = transaction.objectStore('planets');
+    const request = store.get(planetName);
+
+    request.onerror = () => {
+      reject(request.error);
+    }
+
+    request.onsuccess = () => {
+      const planet = request.result;
+      planet.residentData = residents;
+
+      const updateRequest = store.put(planet);
+      updateRequest.onsuccess = () => {
+        resolve(planet);
+      }
+    }
+  })
+}
+
+export const getPlanetsFromDatabase = async (): Promise<PlanetInitialState> => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      reject("Database not initialized");
+      return;
+    }
+
+    const transaction = db.transaction(['planets'], 'readwrite');
+    const store = transaction.objectStore('planets');
+
     let currentIdx = 0;
     const planets: PlanetInitialState = {};
     const request = store.openCursor()
+
+    request.onerror = () => {
+      reject(request.error);
+    }
     
     request.onsuccess = () => {
       const cursor = request.result;
@@ -67,42 +107,22 @@ export const getPlanetsFromDatabase = async () => {
 }
 
 export const getPlanetFromDatabase = async (name: string): Promise<Planet> => {
-  const transaction = db?.transaction(['planets'], 'readwrite');
-  const store = transaction?.objectStore('planets');
-
   return new Promise((resolve, reject) => {
-    const request = store?.get(name);
-    if (!request) {
-
-    } else {
-      request.onsuccess = () => {
-        resolve(request?.result);
-      }
-      request.onerror = () => {
-        reject(request?.error);
-      }
+    if (!db) {
+      reject("Database not initialized");
+      return;
     }
-  })
-}
+    
+    const transaction = db.transaction(['planets'], 'readwrite');
+    const store = transaction.objectStore('planets');
+    const request = store.get(name);
 
-export const storeResidentDataInDatabase = (planetName: string, residents: Resident[]) => {
-  const transaction = db?.transaction(['planets'], 'readwrite');
-  const store = transaction?.objectStore('planets');
-
-  return new Promise((resolve, reject) => {
-    const request = store?.get(planetName);
-    if (request) {
-      request.onsuccess = () => {
-        const planet = request?.result;
-        planet.residentData = residents;
-
-        const updateRequest = store?.put(planet);
-        if (updateRequest) {
-          updateRequest.onsuccess = () => {
-            resolve({ success: true });
-          }
-        }
-      }
+    request.onerror = () => {
+      reject(request.error);
+    }
+    
+    request.onsuccess = () => {
+      resolve(request.result);
     }
   })
 }
