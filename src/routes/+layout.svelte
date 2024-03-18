@@ -1,11 +1,11 @@
 <script>
 	import './styles.css';
 </script>
-<head>
+<svelte:head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Star Wars Planets</title>
-</head>
+</svelte:head>
 <div class="app">
 	<main>
 		<slot />

@@ -51,7 +51,7 @@ const prevPage = () => {
 </script>
 
 <main>
-	<h1>Planets</h1>
+	<h1>Planets of Star Wars</h1>
 	{#if !$planets[$paginationPage]}
 		<p>Loading...</p>
 	{:else}
@@ -59,25 +59,9 @@ const prevPage = () => {
 			<a href={`/planet/${planet.name}`}>{planet.name}</a>
 		{/each}
 	{/if}
-	<button on:click={prevPage}>Previous</button>
-	<span>{$paginationPage}</span>
-	<button on:click={nextPage}>Next</button>
+	<div class="flex">
+		<button class="prev-next" on:click={prevPage}>Previous</button>
+		<span class="page-num">{$paginationPage}</span>
+		<button class="prev-next" on:click={nextPage}>Next</button>
+	</div>
 </main>
-
-<style>
-a {
-	display: block;
-	margin: 10px;
-	padding: 10px;
-	width: 200px;
-	background-color: #f0f0f0;
-	border: 1px solid #ccc;
-	border-radius: 5px;
-	cursor: pointer;
-	transition: background-color 0.3s;
-}
-
-a:hover {
-	background-color: #e0e0e0;
-}
-</style>

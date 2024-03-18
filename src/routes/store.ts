@@ -28,8 +28,7 @@ export const planetInfoKeys: Array<keyof Planet> = [
   'population',
   'rotation_period',
   'surface_water',
-  'terrain',
-  'films',
+  'terrain'
 ];
 
 // TODO: 

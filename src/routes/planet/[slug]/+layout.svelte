@@ -1,11 +1,12 @@
 <script>
   import { page } from '$app/stores';
 </script>
-<head>
+<svelte:head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>{$page.params.slug}</title>
-</head>
+</svelte:head>
+
 <div class="app">
 	<main>
 		<slot />

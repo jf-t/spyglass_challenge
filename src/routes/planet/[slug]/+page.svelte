@@ -18,8 +18,8 @@
       planet.residents.map(residentUrl => {
         fetch(residentUrl)
         .then(response => response.json())
-        .then(data => {
-          residents.push(data.name);
+        .then((data: Resident) => {
+          residents.push(data);
           currentPlanet.set({
             ...planet,
             residentData: residents
@@ -64,6 +64,10 @@
       });
     });
   });
+
+  const capitalCase = (key: string): string => {
+    return key.replace(/^_*(.)|_+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
+  }
 </script>
 
 <a href="/">Home</a>
@@ -72,14 +76,17 @@
 {:else}
   <h1>Planet {$currentPlanet.name}</h1>
   {#each planetInfoKeys as key}
-    <p>{key}: {$currentPlanet[key]}</p>
+    <div class="planet-data">
+      <span class="planet-key">{capitalCase(key)}</span>
+      <span class="planet-value">{$currentPlanet[key]}</span>
+    </div>
   {/each}
   <h2>Residents:</h2>
   {#if !$currentPlanet.residentData.length}
     <p>No residents</p>
   {:else}
     {#each $currentPlanet?.residentData as resident}
-      <p>{resident}</p>
+      <p>{resident.name}</p>
     {/each}
   {/if}
 {/if}
