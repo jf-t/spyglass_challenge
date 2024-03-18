@@ -24,7 +24,6 @@ const fetchPlanetsData = (fetchPage: number) => {
 onMount(async () => {
 	initializeDatabase().then(() => {
 		getPlanetsFromDatabase().then((data) => {
-			console.log(data);
 			planets.set(data);
 			fetchPlanetsData(1);
 		});

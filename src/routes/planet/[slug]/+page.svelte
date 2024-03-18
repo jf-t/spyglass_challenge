@@ -4,43 +4,45 @@
 
   import { planets, paginationPage, currentPlanet, planetInfoKeys } from '../../store';
   import type { Planet, Resident } from '../../types';
-  import { getPlanetsFromDatabase, getPlanetFromDatabase, initializeDatabase, storePlanetsInDatabase } from '../../db';
+  import { getPlanetsFromDatabase, getPlanetFromDatabase, initializeDatabase, storePlanetsInDatabase, storeResidentDataInDatabase } from '../../db';
 
 
   const setCurrentPlanet = (planet: Planet) => {
     let residents: Resident[] = [];
-    currentPlanet.set({
-      ...planet,
-      residentData: residents
-    });
-
-    planet.residents.map(residentUrl => {
-      fetch(residentUrl)
-      .then(response => response.json())
-      .then(data => {
-        residents.push(data.name);
-        currentPlanet.set({
-          ...planet,
-          residentData: residents
-        })
-      }).catch(error => {
-        console.log(error);
-        return [];
+  
+    if (!planet.residentData) {
+      currentPlanet.set({
+        ...planet,
+        residentData: residents
       });
-    });
+      planet.residents.map(residentUrl => {
+        fetch(residentUrl)
+        .then(response => response.json())
+        .then(data => {
+          residents.push(data.name);
+          currentPlanet.set({
+            ...planet,
+            residentData: residents
+          });
+          storeResidentDataInDatabase(planet.name, residents);
+        }).catch(error => {
+          console.log(error);
+          return [];
+        });
+      });
+    } else {
+      currentPlanet.set(planet);
+    }
   }
 
   const fetchPlanetData = () => {
-    getPlanetFromDatabase($page.params.slug).then((data) => {
-      console.log("specirfic planet")
-      console.log(data)
+    getPlanetFromDatabase($page.params.slug).then((data: Planet) => {
       if (data) {
         setCurrentPlanet(data);
       } else {
         fetch(`https://swapi.dev/api/planets?search=${$page.params.slug}`)
         .then(response => response.json())
         .then(data => {
-          storePlanetsInDatabase(data.results);
           if (data.results.length > 0) {
             setCurrentPlanet(data.results[0]);
           } else {
@@ -57,7 +59,6 @@
   onMount(async () => {
     initializeDatabase().then(() => {
       getPlanetsFromDatabase().then((data) => {
-        console.log(data);
         planets.set(data);
         fetchPlanetData();
       });
@@ -65,6 +66,7 @@
   });
 </script>
 
+<a href="/">Home</a>
 {#if !$currentPlanet}
   <p>Loading...</p>
 {:else}
@@ -73,7 +75,11 @@
     <p>{key}: {$currentPlanet[key]}</p>
   {/each}
   <h2>Residents:</h2>
-  {#each $currentPlanet?.residentData as resident}
-    <p>{resident}</p>
-  {/each}
+  {#if !$currentPlanet.residentData.length}
+    <p>No residents</p>
+  {:else}
+    {#each $currentPlanet?.residentData as resident}
+      <p>{resident}</p>
+    {/each}
+  {/if}
 {/if}
