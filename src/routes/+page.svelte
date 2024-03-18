@@ -1,19 +1,22 @@
 <script lang="ts">
-import { page } from '$app/stores';
 import { onMount } from "svelte";
 import { planets, paginationPage } from './store';
-import { initializeDatabase, getPlanetsFromDatabase, storePlanetsInDatabase } from './db';
+import { 
+	initializeDatabase, 
+	getPlanetsFromDatabase, 
+	storePlanetsInDatabase 
+} from './db';
 
-const fetchPlanetsData = (fetchPage: number) => {
-	if ($planets[fetchPage]) return;
+const fetchPlanetsData = (page: number) => {
+	if ($planets[page]) return;
 
-	fetch(`https://swapi.dev/api/planets?page=${fetchPage || 1}`)
+	fetch(`https://swapi.dev/api/planets?page=${page || 1}`)
 		.then(response => response.json())
 		.then(data => {
 			storePlanetsInDatabase(data.results);
 			planets.set({
 				...$planets,
-				[fetchPage]: data.results
+				[page]: data.results
 			});
 		}).catch(error => {
 			console.log(error);
@@ -31,10 +34,6 @@ onMount(async () => {
 });
 
 const nextPage = () => {
-	planets.set({
-		...$planets
-	});
-	
 	const currentPage = $paginationPage || 1;
 	const nextPage = currentPage + 1;
 	paginationPage.set(nextPage);
@@ -47,7 +46,6 @@ const prevPage = () => {
 	paginationPage.set(prevPage);
 	fetchPlanetsData(prevPage);
 }
-
 </script>
 
 <main>

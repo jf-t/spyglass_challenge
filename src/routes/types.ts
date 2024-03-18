@@ -34,5 +34,4 @@ export interface Resident {
   starships: []
   url: string
   vehicles: []
-
 }

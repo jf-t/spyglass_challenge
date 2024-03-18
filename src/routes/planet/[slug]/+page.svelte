@@ -2,9 +2,14 @@
   import { page } from '$app/stores';
   import { onMount } from "svelte";
 
-  import { planets, paginationPage, currentPlanet, planetInfoKeys } from '../../store';
+  import { planets, currentPlanet, planetInfoKeys } from '../../store';
   import type { Planet, Resident } from '../../types';
-  import { getPlanetsFromDatabase, getPlanetFromDatabase, initializeDatabase, storePlanetsInDatabase, storeResidentDataInDatabase } from '../../db';
+  import { 
+    getPlanetsFromDatabase, 
+    getPlanetFromDatabase, 
+    initializeDatabase, 
+    storeResidentDataInDatabase 
+  } from '../../db';
 
 
   const setCurrentPlanet = (planet: Planet) => {
